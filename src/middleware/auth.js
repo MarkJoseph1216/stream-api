@@ -32,7 +32,11 @@ setInterval(loadKeysFromFirestore, 5 * 60 * 1000);
 const TOKEN_SECRET = process.env.TOKEN_SECRET;
 const TOKEN_TTL_MS = 30 * 60 * 1000;
 
-const BLOCKED_PATHS_FOR_PUBLIC = new Set(['/movie', '/api/movie', '/tv', '/api/tv', '/test', '/api/test']);
+const BLOCKED_PREFIXES_FOR_PUBLIC = ['/proxy', '/api/proxy'];
+
+function isBlockedForPublic(pathname) {
+    return BLOCKED_PREFIXES_FOR_PUBLIC.some(p => pathname === p || pathname.startsWith(p + '/'));
+}
 
 export function issueSessionToken() {
     const expires = Date.now() + TOKEN_TTL_MS;
@@ -91,8 +95,14 @@ export function authenticateRequest(req) {
     return { valid: true, error: null, type: entry.type };
 }
 
-export function canAccess(type, pathname) {
-    if (type === 'public') return !BLOCKED_PATHS_FOR_PUBLIC.has(pathname);
+function isStreamProxy(req, pathname) {
+    if (pathname !== '/api' && pathname !== '/api/') return false;
+    const reqUrl = new URL(req.url, `http://${req.headers['host'] || 'localhost'}`);
+    return reqUrl.searchParams.has('url') || reqUrl.searchParams.has('proxy');
+}
+
+export function canAccess(type, req, pathname) {
+    if (type === 'public') return !isStreamProxy(req, pathname);
     return type === 'standard' || type === 'partner' || type === 'player';
 }
 

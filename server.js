@@ -819,15 +819,14 @@ async function handleRequest(req, res) {
 
     if (req.method === 'OPTIONS') return { status: 204, body: '', headers: CORS_HEADERS };
 
-    const PUBLIC_ROUTES = new Set(['/', '', '/health', '/api/health', '/api/auth']);
-    const isPublicRoute = PUBLIC_ROUTES.has(pathname);
+    const PUBLIC_ROUTES = new Set(['/', '']);
+    const isPublicRoute = PUBLIC_ROUTES.has(pathname) || (pathname === '/api/auth' && req.method === 'POST');
 
     const authResult = authenticateRequest(req);
 
     if (!isPublicRoute) {
         if (!authResult.valid) return respondJson(401, { error: authResult.error });
-        if (!canAccess(authResult.type, pathname)) return respondJson(403, { error: 'Access denied' });
-
+        if (!canAccess(authResult.type, req, pathname)) return respondJson(403, { error: 'Access denied' });
         if (!authResult.bypassed) {
             const authHeader = req.headers['authorization'];
             const apiKey = authHeader?.replace('Bearer ', '')?.trim() || req.headers['x-api-key']?.trim();
