@@ -148,8 +148,8 @@ export function canAccessStreaming(keyType) {
     return keyType === 'standard' || keyType === 'partner' || keyType === 'player';
 }
 
-export function canAccessSubtitlesAndDownloads(keyType) {
-    return keyType === 'standard' || keyType === 'partner' || keyType === 'player';
+export function canAccessEverythingElse(keyType) {
+    return keyType === 'standard' || keyType === 'partner' || keyType === 'player' || keyType === 'public';
 }
 
 export function clearRateLimitCache() {

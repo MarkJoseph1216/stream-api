@@ -9,7 +9,7 @@ import { SOURCES, SOURCE_MAP, CACHE_TTL } from './config.js';
 import { handleSubtitleMovie, handleSubtitleTv, fetchSubtitles, SUBTITLE_BASES } from './src/routes/subtitles.js';
 import { handleDownloadMovie, handleDownloadTv } from './src/routes/downloads/main.js';
 import { handleHealth } from './src/routes/health.js';
-import { authenticateRequest, checkRateLimit, canAccessStreaming, canAccessSubtitlesAndDownloads, issueSessionToken } from './src/middleware/auth.js';
+import { authenticateRequest, checkRateLimit, canAccessStreaming, canAccessEverythingElse, issueSessionToken } from './src/middleware/auth.js';
 import { validateTmdbId } from './src/utils/helpers.js';
 import { wrapUrl } from './src/utils/proxy.js';
 import { handleTestRoute, handleDebugRoute } from './src/routes/test.js';
@@ -997,7 +997,7 @@ async function handleRequest(req, res) {
     if (match) {
         const authResult = authenticateRequest(req);
         if (!authResult.valid) return respondJson(401, { error: authResult.error });
-        if (!canAccessSubtitlesAndDownloads(authResult.type)) return respondJson(403, { error: 'Public keys cannot access subtitle endpoints' });
+        if (!canAccessEverythingElse(authResult.type)) return respondJson(403, { error: 'Public keys cannot access subtitle endpoints' });
         googleAnalytic('subtitles-movie', { id: match[1] });
         return handleSubtitleMovie(match[1], CORS_HEADERS);
     }
@@ -1006,7 +1006,7 @@ async function handleRequest(req, res) {
     if (match) {
         const authResult = authenticateRequest(req);
         if (!authResult.valid) return respondJson(401, { error: authResult.error });
-        if (!canAccessSubtitlesAndDownloads(authResult.type)) return respondJson(403, { error: 'Public keys cannot access subtitle endpoints' });
+        if (!canAccessEverythingElse(authResult.type)) return respondJson(403, { error: 'Public keys cannot access subtitle endpoints' });
         googleAnalytic('subtitles-tv', { id: match[1], season: match[2], episode: match[3] });
         return handleSubtitleTv(match[1], match[2], match[3], CORS_HEADERS);
     }
@@ -1015,7 +1015,7 @@ async function handleRequest(req, res) {
     if (match) {
         const authResult = authenticateRequest(req);
         if (!authResult.valid) return respondJson(401, { error: authResult.error });
-        if (!canAccessSubtitlesAndDownloads(authResult.type)) return respondJson(403, { error: 'Public keys cannot access download endpoints' });
+        if (!canAccessEverythingElse(authResult.type)) return respondJson(403, { error: 'Public keys cannot access download endpoints' });
         googleAnalytic('downloads-movie', { id: match[1] });
         return handleDownloadMovie(match[1], CORS_HEADERS);
     }
@@ -1024,7 +1024,7 @@ async function handleRequest(req, res) {
     if (match) {
         const authResult = authenticateRequest(req);
         if (!authResult.valid) return respondJson(401, { error: authResult.error });
-        if (!canAccessSubtitlesAndDownloads(authResult.type)) return respondJson(403, { error: 'Public keys cannot access download endpoints' });
+        if (!canAccessEverythingElse(authResult.type)) return respondJson(403, { error: 'Public keys cannot access download endpoints' });
         googleAnalytic('downloads-tv', { id: match[1], season: match[2], episode: match[3] });
         return handleDownloadTv(match[1], match[2], match[3], CORS_HEADERS);
     }
