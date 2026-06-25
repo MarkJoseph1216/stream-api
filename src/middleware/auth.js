@@ -32,29 +32,27 @@ setInterval(loadKeysFromFirestore, 5 * 60 * 1000);
 const TOKEN_SECRET = process.env.TOKEN_SECRET;
 const TOKEN_TTL_MS = 30 * 60 * 1000;
 
-const BLOCKED_PREFIXES_FOR_PUBLIC = ['/proxy', '/api/proxy'];
 
-function isBlockedForPublic(pathname) {
-    return BLOCKED_PREFIXES_FOR_PUBLIC.some(p => pathname === p || pathname.startsWith(p + '/'));
-}
-
-export function issueSessionToken() {
+export function issueSessionToken(type = 'player') {
     const expires = Date.now() + TOKEN_TTL_MS;
-    const payload = `${expires}`;
+    const payload = `${expires}.${type}`;
     const sig = crypto.createHmac('sha256', TOKEN_SECRET).update(payload).digest('hex');
-    return `${expires}.${sig}`;
+    return `${expires}.${type}.${sig}`;
 }
 
 export function validateSessionToken(token) {
     if (!token) return false;
     try {
         const parts = token.split('.');
-        if (parts.length !== 2) return false;
-        const [expires, sig] = parts;
+        if (parts.length !== 3) return false;
+        const [expires, type, sig] = parts;
         if (Date.now() > parseInt(expires)) return false;
-        const expected = crypto.createHmac('sha256', TOKEN_SECRET).update(expires).digest('hex');
+        const payload = `${expires}.${type}`;
+        const expected = crypto.createHmac('sha256', TOKEN_SECRET).update(payload).digest('hex');
         if (sig.length !== expected.length) return false;
-        return crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'));
+        return crypto.timingSafeEqual(Buffer.from(sig, 'hex'), Buffer.from(expected, 'hex'))
+            ? type
+            : false;
     } catch {
         return false;
     }
@@ -67,14 +65,15 @@ function parseKey(apiKey) {
 
 export function authenticateRequest(req) {
     const host = req.headers['host'] || '';
-    if (host.includes('localhost') || host.includes('127.0.0.1')) {
-        return { valid: true, error: null, type: 'standard', bypassed: true };
-    }
+    // if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    // return { valid: true, error: null, type: 'standard', bypassed: true };
+    // }
 
     const sessionToken = req.headers['x-session-token']?.trim();
     if (sessionToken) {
-        if (validateSessionToken(sessionToken)) {
-            return { valid: true, error: null, type: 'player', bypassed: true };
+        const tokenType = validateSessionToken(sessionToken);
+        if (tokenType) {
+            return { valid: true, error: null, type: tokenType, bypassed: false };
         }
         return { valid: false, error: 'Invalid or expired session token' };
     }
