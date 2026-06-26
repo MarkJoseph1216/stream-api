@@ -831,21 +831,13 @@ async function handleRequest(req, res) {
         const authHeader = req.headers['authorization'];
         const apiKey = authHeader?.replace('Bearer ', '')?.trim() || req.headers['x-api-key']?.trim();
 
-        if (apiKey) {
+        if (apiKey && !authResult.bypassed) {
             const rateLimitResult = checkRateLimit(apiKey, clientIP);
             if (!rateLimitResult.allowed) {
                 return respondJson(429, { error: rateLimitResult.error, resetAt: rateLimitResult.resetAt, limit: rateLimitResult.limit, window: rateLimitResult.window });
             }
         }
-        
-        if (!authResult.bypassed) {
-            const authHeader = req.headers['authorization'];
-            const apiKey = authHeader?.replace('Bearer ', '')?.trim() || req.headers['x-api-key']?.trim();
-            const rateLimitResult = checkRateLimit(apiKey, clientIP);
-            if (!rateLimitResult.allowed) {
-                return respondJson(429, { error: rateLimitResult.error, resetAt: rateLimitResult.resetAt, limit: rateLimitResult.limit, window: rateLimitResult.window });
-            }
-        }
+
     }
 
     if (pathname === '/api/auth' && req.method === 'POST') {
