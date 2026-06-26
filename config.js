@@ -144,9 +144,8 @@ export const SOURCES = [
         timeout: 20000,
         jitter: 500,
         retries: 2,
-        skipVerify: true,
         skipProxy: true,
-        skipCache: true,
+        skipVerify: true,
     },
 
     {
@@ -219,7 +218,6 @@ export const SOURCES = [
         timeout: 20000,
         jitter: 400,
         retries: 2,
-        disabled: true,
         skipProxy: true,
         skipVerify: true,
     },
@@ -307,6 +305,29 @@ export const SOURCES = [
         retries: 2
     },
 
+    {
+        key: 'zxcstream',
+        sourceFile: 'zxcstream',
+        label: 'ZxcStream',
+        proxyParam: 'zs',
+        timeout: 15000,
+        jitter: 500,
+        retries: 2,
+        skipProxy: true,
+        skipVerify: true,
+    },
+
+    {
+        key: 'biavox',
+        sourceFile: 'biavox',
+        label: 'BiaVox',
+        proxyParam: 'bx',
+        timeout: 40000,
+        jitter: 600,
+        retries: 2,
+        skipProxy: true,
+        skipVerify: true,
+    },
 
 ];
 
