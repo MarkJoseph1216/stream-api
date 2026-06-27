@@ -67,13 +67,23 @@ const ROUTE_PATTERNS = {
 
 if (cluster.isPrimary) {
     const cpus = (await import('os')).default.cpus().length;
-    const workerCount = IS_HF ? Math.min(cpus, 4) : 1;
+    const workerCount = IS_HF ? Math.min(cpus, 2) : 1;
     const sharedCache = new Map();
+    const SHARED_CACHE_MAX = 1500;
 
     const pruneCache = () => {
         const now = Date.now();
         for (const [k, v] of sharedCache) {
             if (now - v.ts > v.ttl) sharedCache.delete(k);
+        }
+        if (sharedCache.size > SHARED_CACHE_MAX) {
+            const overflow = sharedCache.size - SHARED_CACHE_MAX;
+            const it = sharedCache.keys();
+            for (let i = 0; i < overflow; i++) {
+                const k = it.next().value;
+                if (k === undefined) break;
+                sharedCache.delete(k);
+            }
         }
     };
 
@@ -102,6 +112,7 @@ if (cluster.isPrimary) {
 
         if (msg.type === 'cache:set') {
             sharedCache.set(msg.key, { value: msg.value, ts: Date.now(), ttl: msg.ttl || CACHE_TTL });
+            if (sharedCache.size > SHARED_CACHE_MAX) pruneCache();
             for (const id in cluster.workers) {
                 if (cluster.workers[id] !== worker) {
                     try { cluster.workers[id]?.send({ type: 'cache:push', key: msg.key, value: msg.value, ttl: msg.ttl || CACHE_TTL }); } catch { }
@@ -169,8 +180,8 @@ const sendGaEvent = (clientId, eventName, params = {}) => {
             signal: AbortSignal.timeout(3000),
         }
     ).then(async res => {
-        const text = await res.text().catch(() => '');
-    }).catch(err => {
+        await res.text().catch(() => '');
+    }).catch(() => {
     });
 };
 
@@ -213,9 +224,9 @@ class LRUCache {
     get size() { return this.#map.size; }
 }
 
-const mainCache = new LRUCache(2000, CACHE_TTL);
-const hlsVerifyCache = new LRUCache(1000, 180_000);
-const testResultCache = new LRUCache(1000, 90_000);
+const mainCache = new LRUCache(600, CACHE_TTL);
+const hlsVerifyCache = new LRUCache(400, 180_000);
+const testResultCache = new LRUCache(400, 90_000);
 
 const sharedInflight = new Map();
 
@@ -341,7 +352,7 @@ function releaseTestSlot() {
 }
 
 const getAbsoluteBase = host =>
-    (host.startsWith('loca lhost') || host.startsWith('127.0.0.1')) ? `http://${host}` : `https://${host}`;
+    (host.startsWith('localhost') || host.startsWith('127.0.0.1')) ? `http://${host}` : `https://${host}`;
 
 const getEffectiveBase = abs => abs;
 
