@@ -24,9 +24,6 @@ const STREAM_HEADERS = {
     Origin: BASE_URL,
 };
 
-export const SKIP_VERIFY = true;
-export const MULTI_URL = true;
-
 const THIRD_PARTY_PROXY_PATTERNS = [
     /^https:\/\/[^/]+\.workers\.dev\/(?:m3u8|mp4)-proxy\?url=(.+?)(?:&|$)/,
     /^https:\/\/[^/]+\.workers\.dev\/((?:https?:\/\/|https?%3A%2F%2F).+)$/,
@@ -169,7 +166,7 @@ export async function getStream(args) {
             const rawHeaders = raw.headers || raw.header || raw.requestHeaders;
             const headers = { ...STREAM_HEADERS, ...(rawHeaders || {}) };
 
-            allSources.push({ url, type, quality, headers, server: srvName, skipProxy: true, skipVerify: true, skipHlsCheck: true });
+            allSources.push({ url, type, quality, headers, server: srvName });
         }
     }
 

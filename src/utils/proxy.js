@@ -22,7 +22,7 @@ export function wrapUrl(rawUrl, sourceKey, absoluteBase, SOURCE_MAP) {
 
     if (EXTERNAL_PROXY_URL) {
         const normalized = raw.replace('http://', 'https://');
-        let wrapped = `${EXTERNAL_PROXY_URL}${encodeURIComponent(normalized)}`;
+        let wrapped = `${EXTERNAL_PROXY_URL}${encodeURIComponent(normalized)}&${cfg.proxyParam}=1`;
         if (typeof rawUrl === 'object' && rawUrl.headers) {
             wrapped += `&proxyHeaders=${encodeURIComponent(JSON.stringify(rawUrl.headers))}`;
         }

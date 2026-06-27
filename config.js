@@ -144,6 +144,7 @@ export const SOURCES = [
         timeout: 20000,
         jitter: 500,
         retries: 2,
+        disabled: true, // Temporarily disabled due to took too long to respond
         skipProxy: true,
         skipVerify: true,
     },
@@ -175,6 +176,7 @@ export const SOURCES = [
         jitter: 700,
         retries: 2,
         skipVerify: true,
+        disabled: true, // Temporarily disabled due to Connection timed out Error code 522
         multiUrl: true,
         verifyHeaders: {
             Referer: 'https://cloudnestra.com/',
@@ -231,6 +233,7 @@ export const SOURCES = [
         jitter: 400,
         retries: 2,
         skipVerify: true,
+        disabled: true, // Temporarily disabled due to the website has been temporarily rate limited
     },
 
     {
@@ -349,38 +352,48 @@ export const SOURCES = [
         timeout: 30000,
         jitter: 500,
         retries: 2,
+        skipVerify: true,
+        multiUrl: true,
     },
 
-{
-  key: 'vidnest',
-  label: 'VidNest',
-  sourceFile: 'vidnest',
-  proxyParam: 'vdn',
-  timeout: 20000,
-  retries: 1,
-  jitter: 0
-},
-    
-{
-  key: 'vidnest-sub',
-  label: 'VidNest (Sub)',
-  sourceFile: 'vidnest',
-  proxyParam: 'vdn',
-  timeout: 20000,
-  retries: 1,
-  jitter: 0
-},
-    
-{
-  key: 'vidnest-dub',
-  label: 'VidNest (Dub)',
-  sourceFile: 'vidnest',
-  proxyParam: 'vdn',
-  timeout: 20000,
-  retries: 1,
-  jitter: 0
-}
-    
+    {
+        key: 'vidnest',
+        label: 'VidNest',
+        sourceFile: 'vidnest',
+        proxyParam: 'vdn',
+        timeout: 20000,
+        retries: 1,
+        jitter: 0,
+        multiUrl: true,
+        skipVerify: true,
+        skipProxy: true
+    },
+
+    {
+        key: 'vidnest-sub',
+        label: 'VidNest (Sub)',
+        sourceFile: 'vidnest',
+        proxyParam: 'vdn',
+        timeout: 20000,
+        retries: 1,
+        jitter: 0,
+        multiUrl: true,
+        skipVerify: true,
+        skipProxy: true
+    },
+
+    {
+        key: 'vidnest-dub',
+        label: 'VidNest (Dub)',
+        sourceFile: 'vidnest',
+        proxyParam: 'vdn',
+        timeout: 20000,
+        retries: 1,
+        jitter: 0,
+        multiUrl: true,
+        skipVerify: true,
+        skipProxy: true
+    },
 
 ];
 
