@@ -395,6 +395,19 @@ export const SOURCES = [
         skipProxy: true
     },
 
+
+    {
+        key: 'dulo',
+        label: 'Dulo',
+        sourceFile: 'dulo',
+        proxyParam: 'dl',
+        timeout: 20000,
+        retries: 1,
+        jitter: 0,
+        multiUrl: true,
+    },
+
+
 ];
 
 export const SOURCE_MAP = Object.fromEntries(SOURCES.map(s => [s.key, s]));
