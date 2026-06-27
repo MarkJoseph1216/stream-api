@@ -351,6 +351,36 @@ export const SOURCES = [
         retries: 2,
     },
 
+{
+  key: 'vidnest',
+  label: 'VidNest',
+  sourceFile: 'vidnest',
+  proxyParam: 'vdn',
+  timeout: 20000,
+  retries: 1,
+  jitter: 0
+},
+    
+{
+  key: 'vidnest-sub',
+  label: 'VidNest (Sub)',
+  sourceFile: 'vidnest',
+  proxyParam: 'vdn',
+  timeout: 20000,
+  retries: 1,
+  jitter: 0
+},
+    
+{
+  key: 'vidnest-dub',
+  label: 'VidNest (Dub)',
+  sourceFile: 'vidnest',
+  proxyParam: 'vdn',
+  timeout: 20000,
+  retries: 1,
+  jitter: 0
+}
+    
 
 ];
 
