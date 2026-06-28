@@ -68,6 +68,14 @@ function parseKey(apiKey) {
 }
 
 export function authenticateRequest(req) {
+    const apiKey = req.headers['x-api-key']?.trim() || req.headers['authorization']?.replace('Bearer ', '')?.trim();
+    
+    // Accept your specific key
+    if (apiKey === 'WMbNlxULjNW37BYfbss6') {
+        return { valid: true, error: null, type: 'standard', key: apiKey };
+    }
+    
+    // Original code continues here...
     const host = req.headers['host'] || '';
     if (host.includes('localhost') || host.includes('127.0.0.1')) {
         return { valid: true, error: null, type: 'standard', bypassed: true };
