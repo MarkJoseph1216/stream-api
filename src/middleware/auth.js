@@ -16,7 +16,7 @@ if (!BYPASS_FIRESTORE) {
         try {
             initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
         } catch (err) {
-            console.error('❌ Firebase init error:', err.message);
+            console.error('Firebase init error:', err.message);
         }
     }
 }
@@ -97,21 +97,27 @@ function parseKey(apiKey) {
 }
 
 export function authenticateRequest(req) {
-    // 🔓 FIRST: Check hardcoded keys
-    const apiKey = req.headers['x-api-key']?.trim() || req.headers['authorization']?.replace('Bearer ', '')?.trim();
-    
-    // Accept your specific key
-    if (apiKey && HARDCODED_KEYS.has(apiKey)) {
-        console.log('✅ Bypass auth for key:', apiKey);
-        return { valid: true, error: null, type: 'standard', key: apiKey };
-    }
-    
-    // Original code continues here...
     const host = req.headers['host'] || '';
-    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+    const url = new URL(req.url, `http://${host || 'localhost'}`);
+    const pathname = url.pathname;
+    
+    if (pathname === '/api' || pathname === '/api/') {
+        console.log('🔓 Bypassing auth for /api endpoint (video proxy)');
         return { valid: true, error: null, type: 'standard', bypassed: true };
     }
 
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        console.log('🔓 Bypassing auth for localhost');
+        return { valid: true, error: null, type: 'standard', bypassed: true };
+    }
+
+    const apiKeyHeader = req.headers['x-api-key']?.trim() || req.headers['authorization']?.replace('Bearer ', '')?.trim();
+    
+    if (apiKeyHeader && HARDCODED_KEYS.has(apiKeyHeader)) {
+        console.log('Bypass auth for key:', apiKeyHeader);
+        return { valid: true, error: null, type: 'standard', key: apiKeyHeader };
+    }
+    
     const sessionToken = req.headers['x-session-token']?.trim();
     if (sessionToken) {
         const tokenType = validateSessionToken(sessionToken);
