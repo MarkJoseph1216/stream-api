@@ -5,15 +5,41 @@ import { getFirestore } from 'firebase-admin/firestore';
 
 dotenv.config();
 
-if (!getApps().length) {
-    initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
+const HARDCODED_KEYS = new Map([
+    ['WMbNlxULjNW37BYfbss6', { type: 'standard', rpm: 100 }]
+]);
+
+const BYPASS_FIRESTORE = true;
+
+if (!BYPASS_FIRESTORE) {
+    if (!getApps().length) {
+        try {
+            initializeApp({ credential: cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)) });
+        } catch (err) {
+            console.error('❌ Firebase init error:', err.message);
+        }
+    }
 }
 
-const db = getFirestore();
+const db = !BYPASS_FIRESTORE ? getFirestore() : null;
 const API_KEYS = new Map();
+
+if (BYPASS_FIRESTORE) {
+    HARDCODED_KEYS.forEach((value, key) => {
+        API_KEYS.set(key, value);
+    });
+    console.log(`Loaded ${API_KEYS.size} hardcoded API keys`);
+    console.log(`Keys: ${[...API_KEYS.keys()].join(', ')}`);
+}
+
 const rateLimitMap = new Map();
 
 async function loadKeysFromFirestore() {
+    if (BYPASS_FIRESTORE || !db) {
+        console.log('Skipping Firestore load (bypass mode)');
+        return;
+    }
+    
     try {
         const snap = await db.collection('api_keys').get();
         API_KEYS.clear();
@@ -23,19 +49,22 @@ async function loadKeysFromFirestore() {
                 API_KEYS.set(doc.id, { type: data.type, rpm: data.requests_per_minute ?? 100 });
             }
         }
-        console.log(`✅ Loaded ${API_KEYS.size} API keys from Firestore`);
-        console.log(`🔑 Keys: ${[...API_KEYS.keys()].join(', ')}`);
+        console.log(`Loaded ${API_KEYS.size} API keys from Firestore`);
+        console.log(`Keys: ${[...API_KEYS.keys()].join(', ')}`);
     } catch (err) {
-        console.error('❌ Firestore error:', err.message);
+        console.error('Firestore error:', err.message);
     }
 }
 
-await loadKeysFromFirestore();
-setInterval(loadKeysFromFirestore, 5 * 60 * 1000);
+if (!BYPASS_FIRESTORE) {
+    await loadKeysFromFirestore();
+    setInterval(loadKeysFromFirestore, 5 * 60 * 1000);
+} else {
+    console.log('Running in BYPASS mode - Firestore disabled');
+}
 
-const TOKEN_SECRET = process.env.TOKEN_SECRET;
+const TOKEN_SECRET = process.env.TOKEN_SECRET || 'fallback-secret-do-not-use-in-production';
 const TOKEN_TTL_MS = 30 * 60 * 1000;
-
 
 export function issueSessionToken(type = 'player') {
     const expires = Date.now() + TOKEN_TTL_MS;
@@ -68,10 +97,12 @@ function parseKey(apiKey) {
 }
 
 export function authenticateRequest(req) {
+    // 🔓 FIRST: Check hardcoded keys
     const apiKey = req.headers['x-api-key']?.trim() || req.headers['authorization']?.replace('Bearer ', '')?.trim();
     
     // Accept your specific key
-    if (apiKey === 'WMbNlxULjNW37BYfbss6') {
+    if (apiKey && HARDCODED_KEYS.has(apiKey)) {
+        console.log('✅ Bypass auth for key:', apiKey);
         return { valid: true, error: null, type: 'standard', key: apiKey };
     }
     
