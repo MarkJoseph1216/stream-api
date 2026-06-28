@@ -23,7 +23,11 @@ async function loadKeysFromFirestore() {
                 API_KEYS.set(doc.id, { type: data.type, rpm: data.requests_per_minute ?? 100 });
             }
         }
-    } catch { }
+        console.log(`✅ Loaded ${API_KEYS.size} API keys from Firestore`);
+        console.log(`🔑 Keys: ${[...API_KEYS.keys()].join(', ')}`);
+    } catch (err) {
+        console.error('❌ Firestore error:', err.message);
+    }
 }
 
 await loadKeysFromFirestore();
